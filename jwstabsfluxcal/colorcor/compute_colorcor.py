@@ -6,6 +6,7 @@ from astropy.modeling.models import PowerLaw1D, BlackBody
 import astropy.units as u
 
 from jwstabsfluxcal.Spitzer.read_spitzer import read_irac
+from jwstabsfluxcal.Webb.read_webb import read_miri
 
 
 def compute_colorcor(wave, bandpass, flux_ref, wave_ref, flux_source):
@@ -46,7 +47,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--inst",
-        choices=["irac"],
+        choices=["miri", "irac"],
         default="irac",
         help="Instrument",
     )
@@ -64,9 +65,12 @@ if __name__ == "__main__":
 
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(10, 8))
 
-    irac_bps = read_irac()
-    bps = irac_bps
-    ref_shape = PowerLaw1D(amplitude=1.0, x_0=1.0, alpha=1.0)
+    if args.inst == "miri":
+        bps = read_miri()
+        exit()
+    else:
+        bps = read_irac()
+        ref_shape = PowerLaw1D(amplitude=1.0, x_0=1.0, alpha=1.0)
 
     # define shapes
     bbscale = 1.0 * u.erg / (u.cm ** 2 * u.s * u.micron * u.steradian)
