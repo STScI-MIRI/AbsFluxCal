@@ -2,6 +2,8 @@ import argparse
 
 import numpy as np
 import matplotlib.pyplot as plt
+from astropy.modeling.models import PowerLaw1D, BlackBody
+import astropy.units as u
 
 from jwstabsfluxcal.Spitzer.read_spitzer import read_irac
 
@@ -39,7 +41,7 @@ def compute_colorcor(wave, bandpass, flux_ref, wave_ref, flux_source):
     return inttop / intbot
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -60,17 +62,62 @@ if __name__ == '__main__':
     plt.rc("xtick.major", width=2)
     plt.rc("ytick.major", width=2)
 
-    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(8, 8))
+    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(10, 8))
 
     irac_bps = read_irac()
-
     bps = irac_bps
-    for ckey in bps.keys():
-        waves = bps[ckey][1].value
-        flux_source = np.full((len(waves)), 1.0)
-        flux_ref = 1.0 / waves
-        cc = compute_colorcor(waves, bps[ckey][2], flux_ref, bps[ckey][0], flux_source)
-        print(ckey, cc)
+    ref_shape = PowerLaw1D(amplitude=1.0, x_0=1.0, alpha=1.0)
+
+    # define shapes
+    bbscale = 1.0 * u.erg / (u.cm ** 2 * u.s * u.micron * u.steradian)
+    source_shapes = [
+        PowerLaw1D(amplitude=1.0, x_0=1.0, alpha=-2.0),
+        PowerLaw1D(amplitude=1.0, x_0=1.0, alpha=-1.0),
+        PowerLaw1D(amplitude=1.0, x_0=1.0, alpha=0.0),
+        PowerLaw1D(amplitude=1.0, x_0=1.0, alpha=1.0),
+        PowerLaw1D(amplitude=1.0, x_0=1.0, alpha=2.0),
+        BlackBody(scale=bbscale, temperature=10000.0 * u.K),
+        BlackBody(scale=bbscale, temperature=5000.0 * u.K),
+        BlackBody(scale=bbscale, temperature=1000.0 * u.K),
+        BlackBody(scale=bbscale, temperature=500.0 * u.K),
+        BlackBody(scale=bbscale, temperature=200.0 * u.K),
+    ]
+    source_labels = [
+        r"$\lambda^2$",
+        r"$\lambda^1$",
+        r"$\lambda^0$",
+        r"$\lambda^{-1}$",
+        r"$\lambda^{-2}$",
+        r"$BB(T=10000 K)$",
+        r"$BB(T=5000 K)$",
+        r"$BB(T=1000 K)$",
+        r"$BB(T=500 K)$",
+        r"$BB(T=200 K)$",
+    ]
+
+    for cshape, clabel in zip(source_shapes, source_labels):
+        pwaves = []
+        pcolcor = []
+        for ckey in bps.keys():
+            waves = bps[ckey][1].to(u.micron).value
+            if isinstance(cshape, BlackBody):
+                flux_source = cshape(waves * u.micron).value
+            else:
+                flux_source = cshape(waves)
+            flux_ref = ref_shape(waves)
+            pwaves.append(bps[ckey][0])
+            cc = compute_colorcor(
+                waves, bps[ckey][2], flux_ref, bps[ckey][0], flux_source
+            )
+            pcolcor.append(cc)
+        ax.plot(pwaves, pcolcor, label=clabel)
+
+    ax.set_xlabel(r"$\lambda$ [$\mu$m]")
+    ax.set_ylabel("K")
+    ax.set_title(args.inst)
+
+    ax.legend()
+    fig.tight_layout()
 
     fname = f"color_corrections_{args.inst}"
     if args.png:
