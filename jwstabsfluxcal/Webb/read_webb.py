@@ -1,4 +1,5 @@
 import numpy as np
+import astropy.units as u
 
 from pandeia.engine.instrument_factory import InstrumentFactory
 
@@ -36,7 +37,6 @@ def read_miri():
             "dynamic_scene": True,
             "instrument": {
                 "aperture": "imager",
-                "disperser": "null",
                 "filter": filtername,
                 "instrument": "miri",
                 "mode": "imaging",
@@ -58,8 +58,7 @@ def read_miri():
         inttop = np.trapz(wave * eff, wave)
         intbot = np.trapz(eff / wave, wave)
         ref_wave = np.sqrt(inttop / intbot)
-        print(filtername, ref_wave, inttop, intbot)
 
-        miri_bandpasses[filtername] = (ref_wave, wave, eff)
+        miri_bandpasses[filtername] = (ref_wave, wave * u.micron, eff)
 
-    return (wave, eff)
+    return miri_bandpasses

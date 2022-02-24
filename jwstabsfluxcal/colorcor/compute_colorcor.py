@@ -67,7 +67,7 @@ if __name__ == "__main__":
 
     if args.inst == "miri":
         bps = read_miri()
-        exit()
+        ref_shape = PowerLaw1D(amplitude=1.0, x_0=1.0, alpha=0.0)
     else:
         bps = read_irac()
         ref_shape = PowerLaw1D(amplitude=1.0, x_0=1.0, alpha=1.0)
