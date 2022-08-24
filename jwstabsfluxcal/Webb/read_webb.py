@@ -53,17 +53,11 @@ def read_miri():
         # get the throughput of the instrument over the desired wavelength range
         eff = instrument_factory.get_total_eff(wave)
 
-        # import matplotlib.pyplot as plt
-        # plt.plot(wave, eff)
-        # plt.show()
-
         # compute the reference wave
         # defined as the pivot wavelength in Gordon et al. (2022)
         inttop = np.trapz(wave * eff, wave)
         intbot = np.trapz(eff / wave, wave)
         ref_wave = np.sqrt(inttop / intbot)
-
-        print(filtername, ref_wave)
 
         miri_bandpasses[filtername] = (ref_wave, wave * u.micron, eff)
 

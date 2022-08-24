@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from astropy.modeling.models import PowerLaw1D, BlackBody
 import astropy.units as u
+from astropy.table import QTable
 
 from jwstabsfluxcal.Spitzer.read_spitzer import read_irac
 from jwstabsfluxcal.Webb.read_webb import read_miri
@@ -46,10 +47,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--inst",
-        choices=["miri", "irac"],
-        default="irac",
-        help="Instrument",
+        "--inst", choices=["miri", "irac"], default="irac", help="Instrument",
     )
     parser.add_argument("--png", help="save figure as a png file", action="store_true")
     parser.add_argument("--pdf", help="save figure as a pdf file", action="store_true")
@@ -99,7 +97,26 @@ if __name__ == "__main__":
         r"$BB(T=200 K)$",
     ]
 
-    for cshape, clabel in zip(source_shapes, source_labels):
+    collabels = [
+        "lam2",
+        "lam1",
+        "lam0",
+        "lam-1",
+        "lam-2",
+        "BB(T=10000K)",
+        "BB(T=5000K)",
+        "BB(T=1000K)",
+        "BB(T=500K)",
+        "BB(T=200K)",
+    ]
+
+    # output table
+    otab = QTable()
+    otab["Bands"] = [ckey for ckey in bps.keys()]
+
+    got_rwaves = False
+    rwaves = []
+    for cshape, clabel, collab in zip(source_shapes, source_labels, collabels):
         pwaves = []
         pcolcor = []
         for ckey in bps.keys():
@@ -109,12 +126,27 @@ if __name__ == "__main__":
             else:
                 flux_source = cshape(waves)
             flux_ref = ref_shape(waves)
+            if not got_rwaves:
+                rwaves.append(bps[ckey][0])
             pwaves.append(bps[ckey][0])
             cc = compute_colorcor(
                 waves, bps[ckey][2], flux_ref, bps[ckey][0], flux_source
             )
             pcolcor.append(cc)
+        if not got_rwaves:
+            otab["pivotwave"] = rwaves
+            otab["pivotwave"].format = "10.6f"
+            got_rwaves = True
         ax.plot(pwaves, pcolcor, label=clabel)
+        otab[collab] = pcolcor
+        otab[collab].format = "10.6f"
+
+    otab.write(
+        f"color_corrections_{args.inst}.dat",
+        # format="ascii.commented_header",
+        format="ascii.fixed_width",
+        overwrite=True,
+    )
 
     ax.set_xlabel(r"$\lambda$ [$\mu$m]")
     ax.set_ylabel("K")
