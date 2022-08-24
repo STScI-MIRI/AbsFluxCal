@@ -14,11 +14,15 @@ def read_miri():
         "f560w",
         "f770w",
         "f1000w",
+        "f1065c",
+        "f1140c",
         "f1130w",
         "f1280w",
         "f1500w",
+        "f1550c",
         "f1800w",
         "f2100w",
+        "f2300c",
         "f2550w",
     ]
 
@@ -58,6 +62,8 @@ def read_miri():
         inttop = np.trapz(wave * eff, wave)
         intbot = np.trapz(eff / wave, wave)
         ref_wave = np.sqrt(inttop / intbot)
+
+        print(filtername, ref_wave)
 
         miri_bandpasses[filtername] = (ref_wave, wave * u.micron, eff)
 
