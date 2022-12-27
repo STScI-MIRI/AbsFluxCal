@@ -21,7 +21,7 @@ This code is licensed under a 3-clause BSD style license (see the
 Utilities
 ---------
 
-1. Bandpass response functions:
+1. Bandpass response functions: read_webb, read_spitzer
    Webb: using pandeia engine (required to be installed), supports MIRI
    Spitzer: cached ascii tables, supports IRAC
 
