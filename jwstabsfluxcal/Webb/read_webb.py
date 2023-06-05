@@ -24,6 +24,7 @@ def read_miri():
         "f2100w",
         "f2300c",
         "f2550w",
+        "fnd",
     ]
 
     miri_bandpasses = {}
