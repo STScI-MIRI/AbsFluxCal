@@ -118,6 +118,10 @@ if __name__ == "__main__":
     rwaves = []
     for cshape, clabel, collab in zip(source_shapes, source_labels, collabels):
         pwaves = []
+        bandwidths = []
+        effresps = []
+        bluewaves = []
+        redwaves = []
         pcolcor = []
         for ckey in bps.keys():
             waves = bps[ckey][1].to(u.micron).value
@@ -133,10 +137,43 @@ if __name__ == "__main__":
                 waves, bps[ckey][2], flux_ref, bps[ckey][0], flux_source
             )
             pcolcor.append(cc)
+
+            # compute additional stats
+            eff = bps[ckey][2]
+
+            # bandwidth
+            intresp = np.trapz(eff, waves)
+            bwidth = intresp / max(eff)
+            bandwidths.append(bwidth)
+
+            # effective response
+            pwave = bps[ckey][0]
+            bvals = (waves >= (pwave - 0.5 * bwidth)) & (waves <= (pwave + 0.5 * bwidth))
+            effresps.append(np.average(eff[bvals]))
+
+            # blue and red wavelengths where transmission drops to 50% of the peak
+            norm_eff = eff / max(eff)
+            bvals = (waves <= pwave) & (norm_eff > 0.1)
+            bwave = np.interp([0.5], norm_eff[bvals], waves[bvals])
+            bluewaves.append(bwave[0])
+            bvals = (waves >= pwave) & (norm_eff > 0.1)
+            rwave = np.interp([0.5], norm_eff[bvals], waves[bvals])
+            redwaves.append(rwave[0])
+
         if not got_rwaves:
             otab["pivotwave"] = rwaves
             otab["pivotwave"].format = "10.6f"
             got_rwaves = True
+
+        otab["bandwidth"] = bandwidths
+        otab["bandwidth"].format = "10.6f"
+        otab["effresponse"] = effresps
+        otab["effresponse"].format = "10.6f"
+        otab["bluewave"] = bluewaves
+        otab["bluewave"].format = "10.6f"
+        otab["redwave"] = redwaves
+        otab["redwave"].format = "10.6f"
+
         ax.plot(pwaves, pcolcor, label=clabel)
         otab[collab] = pcolcor
         otab[collab].format = "10.6f"
