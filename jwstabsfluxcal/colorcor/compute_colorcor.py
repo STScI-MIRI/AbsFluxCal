@@ -153,11 +153,12 @@ if __name__ == "__main__":
 
             # blue and red wavelengths where transmission drops to 50% of the peak
             norm_eff = eff / max(eff)
-            bvals = (waves <= pwave) & (norm_eff > 0.1)
+            bvals = (waves <= pwave) & (norm_eff > 0.01)
             bwave = np.interp([0.5], norm_eff[bvals], waves[bvals])
             bluewaves.append(bwave[0])
-            bvals = (waves >= pwave) & (norm_eff > 0.1)
-            rwave = np.interp([0.5], norm_eff[bvals], waves[bvals])
+
+            bvals = (waves >= pwave) & (norm_eff > 0.01)
+            rwave = np.interp([0.5], np.flip(norm_eff[bvals]), np.flip(waves[bvals]))
             redwaves.append(rwave[0])
 
         if not got_rwaves:
