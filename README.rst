@@ -27,3 +27,6 @@ Utilities
 
 2. Color corrections: python -m jwstabsfluxcal.colorcor.compute_colorcor
    All supported bandpasses.
+
+2. SiriusVega zero mag fluxes: python -m jwstabsfluxcal.siriusvega.compute_siriusvega_zmag
+   All supported bandpasses.
