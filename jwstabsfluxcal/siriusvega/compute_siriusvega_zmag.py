@@ -7,6 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import astropy.units as u
 from astropy.table import QTable
+from astropy.constants import c
 
 from jwstabsfluxcal.Webb.read_webb import read_miri
 
@@ -63,7 +64,7 @@ if __name__ == "__main__":
 
     mwave = (modspec["WAVELENGTH"].value * u.angstrom).to(u.micron)
     mflux = modspec["FLUX"].value * u.erg / (u.cm * u.cm * u.s * u.angstrom)
-    mflux = mflux.to(u.Jy, equivalencies=u.spectral_density(mwave))
+    # mflux = mflux.to(u.Jy, equivalencies=u.spectral_density(mwave))
 
     # shift Sirius fainter by 1.395 mags as recommended by Rieke et al. (2022)
     mflux *= 10 ** (-0.4 * 1.395)
@@ -82,8 +83,9 @@ if __name__ == "__main__":
         bands.append(cband)
         bwaves.append(rwave)
         bfluxes.append(bflux.value)
-        #print(cband, rwave, bflux)
-        print(f"{cband.upper()} & {bflux.value:.3f} \\\\")
+        # compute F(nu) see Bohlin et al. (2014)
+        bflux_nu = bflux.to(u.Jy, equivalencies=u.spectral_density(rwave * u.micron))
+        print(f"{cband.upper()} & {bflux.value:.3e} & {bflux_nu.value:.3f} \\\\")
 
     bwaves = np.array(bwaves) * u.micron
     bfluxes = np.array(bfluxes) * u.Jy
@@ -91,10 +93,10 @@ if __name__ == "__main__":
     ax.plot(bwaves, bfluxes, "bo")
 
     ax.set_xlabel(r"$\lambda$ [$\mu$m]")
-    ax.set_ylabel(r"$F(\nu)$ [Jy]")
+    ax.set_ylabel(r"$F(\lambda)$")
 
     ax.set_xlim(4.0, 28.0)
-    ax.set_ylim(1, 200.)
+    #ax.set_ylim(1, 200.)
 
     ax.set_yscale("log")
 
