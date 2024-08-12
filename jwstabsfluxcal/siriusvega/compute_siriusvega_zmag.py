@@ -12,7 +12,7 @@ from astropy.constants import c
 from jwstabsfluxcal.Webb.read_webb import read_miri
 
 
-def compute_bandflux(wave, flux_source, bwave, bandpass):
+def compute_bandflux(wave, flux_source, bwave, bandpass, cband):
     """
     Compute the band flux given the bandpass, reference spectrum,
     and source spectrum.  Assumes a flat reference spectrum
@@ -32,8 +32,8 @@ def compute_bandflux(wave, flux_source, bwave, bandpass):
     flux_source_bp = np.interp(bwave, wave, flux_source)
 
     # compute the the integrals
-    inttop = np.trapz(bwave * bandpass * flux_source_bp)
-    intbot = np.trapz(bwave * bandpass)
+    inttop = np.trapz(bwave * bandpass * flux_source_bp, bwave)
+    intbot = np.trapz(bwave * bandpass, bwave)
 
     return inttop / intbot
 
@@ -79,7 +79,7 @@ if __name__ == "__main__":
     bfluxes = []
     for cband in bandpasses.keys():
         rwave, cwave, ceff = bandpasses[cband]
-        bflux = compute_bandflux(mwave, mflux, cwave, ceff)
+        bflux = compute_bandflux(mwave, mflux, cwave, ceff, cband)
         bands.append(cband)
         bwaves.append(rwave)
         bfluxes.append(bflux.value)
